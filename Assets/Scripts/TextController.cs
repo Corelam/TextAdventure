@@ -17,61 +17,21 @@ public class TextController : MonoBehaviour {
     private string currentRoom;         // not used yet         // to check if enemy is in the same room as player
 
     public DialogBoxController dialog;
-
-    private int hours = 2;
-    private int minutes = 37;
-    private float seconds = 0.0f;
+    public EquipmentManager equipment;
+    public GameTimeController gameTime;
 
     private bool enemy;
     private bool enemySeen;             // not used yet
 
     //Awake(){}
 
-    #region Equipment
-    public Image phoneI; 
-    private bool phone;
-    public Text phoneClock;
-
-    private bool doorKey;
-    private bool closetKey;
-    private bool pistol;
-    private bool butterKnife;
-    #endregion
-
-    #region Clothes
-    private bool shoes;
-    private bool szlafrok;
-    #endregion
-
     void Start () {
-        phoneI.enabled = false;
-        phoneClock.enabled = false;
-
         myState = States.bedroom_0_0;
+        //EquipmentManager equipment = GetComponent<EquipmentManager>();
+        //equipment.
 	}
 	
-    void Clock()
-    {
-        seconds += Time.deltaTime;
-
-        if (seconds >= 60) {
-            minutes++;
-            seconds = 0.0f;
-        }
-
-        if (minutes >= 60) {
-            hours++;
-            minutes = 0;
-        }
-
-        if (hours >= 24) {
-            hours = 0;
-        }
-    }
-    
 	void Update () {
-        Clock();
-
         if      (myState == States.bedroom_0_0)     { bedroom_0_0(); currentRoom = "Bedroom"; }
         else if (myState == States.window_0)        { window_0(); currentRoom = "Bedroom"; }
         else if (myState == States.bedroom_0_1)     { bedroom_0_1(); currentRoom = "Bedroom"; }
@@ -80,37 +40,11 @@ public class TextController : MonoBehaviour {
         else if (myState == States.hall_0)          { hall_0(); currentRoom = "Hall"; }
     }
 
-    #region Equipment functionality
-
-    #region Phone
-    public void Phone_CheckTime()
-    {
-        StartCoroutine(PhoneClock());
-    }
-
-    IEnumerator PhoneClock()
-    {
-        phoneClock.enabled = true;
-
-        for (int i = 0; i<3; i++)
-        {
-            phoneClock.text = hours + ":" + minutes;
-            yield return new WaitForSeconds(0.75F);
-            phoneClock.text = hours + " " + minutes;
-            yield return new WaitForSeconds(0.75F);
-        }
-        phoneClock.enabled = false;
-    }
-    #endregion
-    
-    #endregion
-
-
     #region Rooms methods
 
     void bedroom_0_0()
     {
-        text.text = "Budzisz się w nocy. Spoglądasz na budzik, leżący na stoliku nocnym. Jest " + hours + ":" + minutes + ".\n" +
+        text.text = "Budzisz się w nocy. Spoglądasz na budzik, leżący na stoliku nocnym. Jest " + gameTime.hours + ":" + gameTime.minutes + ".\n" +
                     "Nie możesz spać. Masz przeczucie, jakby coś tej nocy miało się wydarzyć." +
                     "\n-> spójrz przez [O]kno" +
                     "\n-> wyjdź na [K]orytarz";
@@ -134,26 +68,26 @@ public class TextController : MonoBehaviour {
         text.text = "Na łóżku leży rozgrzebana pościel i poduszka z odgniecionym śladem Twojej głowy.\n" +
                     "W pokoju panuje chłód. ";
 
-        if (!shoes) {
+        if (!equipment.Shoes_IsEnabled()) {
             text.text += "Panele są zimne, marzną Ci stopy.";
             text.text += "\n-> załóż [B]uty.";
         }
 
-        if (!phone && shoes) {
+        if (!equipment.Phone_IsEnabled() && equipment.Shoes_IsEnabled()) {
             text.text += "Kiedy schylasz się po buty, zauważasz telefon." +
                          "\n-> weź [T]elefon z szafki nocnej.";
         }
 
-        if (!szlafrok) {
+        if (!equipment.Szlafrok_IsEnabled()) {
             text.text += "\n-> Otwórz szafę i załóż [S]zlafrok.";
         }
         
         text.text += "\n-> wyjdź na [K]orytarz.";
 
-        if      (Input.GetKeyDown(KeyCode.T) && !phone)     { phone = true; phoneI.enabled = true; myState = States.bedroom_0_1; }
-        else if (Input.GetKeyDown(KeyCode.K))               { myState = States.upperCorridor_0; previousState = States.bedroom_0_1; StartCoroutine(EnemyCountdown()); }
-        else if (Input.GetKeyDown(KeyCode.B) && !shoes)     { shoes = true; myState = States.bedroom_0_1; }
-        else if (Input.GetKeyDown(KeyCode.S) && !szlafrok)  { szlafrok = true; myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę i ubierasz szlafrok."); }
+        if      (Input.GetKeyDown(KeyCode.T) && !equipment.Phone_IsEnabled())       { equipment.Phone_Enable(); myState = States.bedroom_0_1; }
+        else if (Input.GetKeyDown(KeyCode.K))                                       { myState = States.upperCorridor_0; previousState = States.bedroom_0_1; StartCoroutine(EnemyCountdown()); }
+        else if (Input.GetKeyDown(KeyCode.B) && !equipment.Shoes_IsEnabled())       { equipment.Shoes_Enable(); myState = States.bedroom_0_1; }
+        else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę i ubierasz szlafrok."); }
     }
 
     void upperCorridor_0()
