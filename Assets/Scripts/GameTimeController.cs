@@ -7,11 +7,8 @@ public class GameTimeController : MonoBehaviour {
     public int hours = 2;
     public int minutes = 37;
     private float seconds = 0.0f;
-    
-    void Start () {
-		
-	}
-	
+    [SerializeField] private float timeSpeed = 1;         // used to speed up game time flow
+    	
 	// Update is called once per frame
 	void Update () {
         Clock();
@@ -19,7 +16,7 @@ public class GameTimeController : MonoBehaviour {
 
     void Clock()
     {
-        seconds += Time.deltaTime;
+        seconds += Time.deltaTime * timeSpeed;
 
         if (seconds >= 60)
         {

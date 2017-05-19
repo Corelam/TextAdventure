@@ -8,10 +8,10 @@ public class EquipmentManager : MonoBehaviour {
     [SerializeField] private TextController textController;
     [SerializeField] private GameTimeController gameTime;
 
-    [HideInInspector] public bool doorKey;
-    [HideInInspector] public bool closetKey;
-    [HideInInspector] public bool pistol;
-    [HideInInspector] public bool butterKnife;
+    private bool doorKey;
+    private bool closetKey;
+    private bool pistol;
+    private bool butterKnife;
 
     void Start()
     {
@@ -24,13 +24,14 @@ public class EquipmentManager : MonoBehaviour {
     [SerializeField] private Image phoneImage;
     [SerializeField] private Text phoneClock;
 
-    /// <summary> Check if phone was found in the game. </summary>
-    /// <returns> Returns true if phone is enabled. </returns>
+    /// <summary> Checks if player has Phone in the game. </summary>
+    /// <returns> Returns true if Phone is enabled. </returns>
     public bool Phone_IsEnabled()
     {
         return phone;
     }
 
+    /// <summary> Enables Phone item to the player. </summary>
     public void Phone_Enable()
     {
         phoneImage.enabled = true;
@@ -39,6 +40,7 @@ public class EquipmentManager : MonoBehaviour {
         phone = true;
     }
 
+    /// <summary> Disables Phone item from the player. </summary>
     public void Phone_Disable()         // method not used yet
     {
         phoneImage.enabled = false;
@@ -46,7 +48,8 @@ public class EquipmentManager : MonoBehaviour {
         phoneClock.enabled = false;
         phone = false;
     }
-
+    
+    /// <summary> Shows ingame time when player has the Phone. </summary>
     public void Phone_CheckTime()
     {
         StartCoroutine(Phone_Clock());

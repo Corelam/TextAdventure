@@ -16,20 +16,48 @@ public class TextController : MonoBehaviour {
     
     private string currentRoom;         // not used yet         // to check if enemy is in the same room as player
 
-    public DialogBoxController dialog;
-    public EquipmentManager equipment;
-    public GameTimeController gameTime;
-
-    private bool enemy;
-    private bool enemySeen;             // not used yet
+    private DialogBoxController dialog;
+    private EquipmentManager equipment;
+    private GameTimeController gameTime;
+    private EnemyController enemy;
 
     //Awake(){}
 
     void Start () {
         myState = States.bedroom_0_0;
-        //EquipmentManager equipment = GetComponent<EquipmentManager>();
-        //equipment.
-	}
+
+        GameObject dialogboxControllerObject = GameObject.FindWithTag("DialogBox");
+        if (dialogboxControllerObject != null) {
+            dialog = dialogboxControllerObject.GetComponent<DialogBoxController>();
+        }
+        if (dialogboxControllerObject == null) {
+            Debug.Log("Cannot find 'DialogBoxController' script.");
+        }
+
+        GameObject equipmentManagerObject = GameObject.FindWithTag("EquipmentManager");
+        if (equipmentManagerObject != null) {
+            equipment = equipmentManagerObject.GetComponent<EquipmentManager>();
+        }
+        if (equipmentManagerObject == null) {
+            Debug.Log("Cannot find 'EquipmentManager' script.");
+        }
+
+        GameObject gametimeControllerObject = GameObject.FindWithTag("GameTime");
+        if (gametimeControllerObject != null) {
+            gameTime = gametimeControllerObject.GetComponent<GameTimeController>();
+        }
+        if (gametimeControllerObject == null) {
+            Debug.Log("Cannot find 'GameTimeController' script.");
+        }
+
+        GameObject enemyControllerObject = GameObject.FindWithTag("Enemy");
+        if (enemyControllerObject != null) {
+            enemy = enemyControllerObject.GetComponent<EnemyController>();
+        }
+        if (enemyControllerObject == null) {
+            Debug.Log("Cannot find 'EnemyController' script.");
+        }
+    }
 	
 	void Update () {
         if      (myState == States.bedroom_0_0)     { bedroom_0_0(); currentRoom = "Bedroom"; }
@@ -85,7 +113,7 @@ public class TextController : MonoBehaviour {
         text.text += "\n-> wyjdź na [K]orytarz.";
 
         if      (Input.GetKeyDown(KeyCode.T) && !equipment.Phone_IsEnabled())       { equipment.Phone_Enable(); myState = States.bedroom_0_1; }
-        else if (Input.GetKeyDown(KeyCode.K))                                       { myState = States.upperCorridor_0; previousState = States.bedroom_0_1; StartCoroutine(EnemyCountdown()); }
+        else if (Input.GetKeyDown(KeyCode.K))                                       { myState = States.upperCorridor_0; previousState = States.bedroom_0_1; StartCoroutine(enemy.EnemyCountdown()); }
         else if (Input.GetKeyDown(KeyCode.B) && !equipment.Shoes_IsEnabled())       { equipment.Shoes_Enable(); myState = States.bedroom_0_1; }
         else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę i ubierasz szlafrok."); }
     }
@@ -104,10 +132,10 @@ public class TextController : MonoBehaviour {
                      "\n-> Idź do [S]ypialni" +
                      "\n-> Idz do [Ł]azienki";
 
-        if      (Input.GetKeyDown(KeyCode.W)) { dialog.Open("Światło nie działa. Pewnie korki wysiadły."); }
-        else if (Input.GetKeyDown(KeyCode.Z)) { myState = States.hall_0; }
-        else if (Input.GetKeyDown(KeyCode.S) && enemySeen) { myState = States.bedroom_0_1; }
-        else if (Input.GetKeyDown(KeyCode.L)) { myState = States.bathroom_0; }
+        if      (Input.GetKeyDown(KeyCode.W))                               { dialog.Open("Światło nie działa. Pewnie korki wysiadły."); }
+        else if (Input.GetKeyDown(KeyCode.Z))                               { myState = States.hall_0; }
+        else if (Input.GetKeyDown(KeyCode.S) && !enemy.EnemyDetected())     { myState = States.bedroom_0_1; }
+        else if (Input.GetKeyDown(KeyCode.L))                               { myState = States.bathroom_0; }
     }
 
     void hall_0()
@@ -128,10 +156,4 @@ public class TextController : MonoBehaviour {
 
     #endregion
 
-    IEnumerator EnemyCountdown()
-    {
-        yield return new WaitForSeconds(60);
-        dialog.Open("Słyszysz dziwny dźwięk...");
-        yield break;
-    }
 }
