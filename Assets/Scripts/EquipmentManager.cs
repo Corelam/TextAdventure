@@ -17,11 +17,14 @@ public class EquipmentManager : MonoBehaviour {
     {
         phoneImage.enabled = false;
         phoneClock.enabled = false;
+        phoneImage_full.SetActive(false);
     }
 
     #region Phone
     private bool phone;
+    private Coroutine phoneCoroutine;
     [SerializeField] private Image phoneImage;
+    [SerializeField] private GameObject phoneImage_full;
     [SerializeField] private Text phoneClock;
 
     /// <summary> Checks if player has Phone in the game. </summary>
@@ -50,23 +53,30 @@ public class EquipmentManager : MonoBehaviour {
     }
     
     /// <summary> Shows ingame time when player has the Phone. </summary>
-    public void Phone_CheckTime()
+    public void Phone_Open()
     {
-        StartCoroutine(Phone_Clock());
+        phoneImage_full.SetActive(true);
+        phoneCoroutine = StartCoroutine(Phone_Clock());
+    }
+
+    public void Phone_Close()
+    {
+        StopCoroutine(phoneCoroutine);
+        phoneClock.enabled = false;
+        phoneImage_full.SetActive(false);
     }
 
     private IEnumerator Phone_Clock()
     {
         phoneClock.enabled = true;
 
-        for (int i = 0; i < 3; i++)
+        for (;;)
         {
             phoneClock.text = gameTime.hours + ":" + gameTime.minutes;
             yield return new WaitForSeconds(0.75F);
             phoneClock.text = gameTime.hours + " " + gameTime.minutes;
             yield return new WaitForSeconds(0.75F);
         }
-        phoneClock.enabled = false;
     }
     #endregion
 

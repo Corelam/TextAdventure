@@ -14,11 +14,11 @@ public class DialogBoxController : MonoBehaviour {
     {
         if (show)
         {
+            GUI.color = Color.green;
             windowRect = new Rect((Screen.width - 300) / 2, (Screen.height - (75 + 25 * dialogButtons)) / 2, 300, (50 + 25 * dialogButtons));   // 300x(50 + 25 * number of buttons requested) px window will apear in the center of the screen.
             windowRect = GUI.Window(0, windowRect, WindowDialog, "~~~ Komunikat ~~~");
         }
     }
-    
 
     /// <summary> This is the actual window. </summary>
     void WindowDialog(int windowID)
@@ -34,6 +34,8 @@ public class DialogBoxController : MonoBehaviour {
                 show = false;
             }
         }
+
+        //GUI.DragWindow();
     }
 
 

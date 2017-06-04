@@ -16,22 +16,32 @@ public class TextController : MonoBehaviour {
     
     private string currentRoom;         // not used yet         // to check if enemy is in the same room as player
 
-    private DialogBoxController dialog;
+    //private DialogBoxController dialog;
     private EquipmentManager equipment;
     private GameTimeController gameTime;
     private EnemyController enemy;
+
+    private GameDialogBoxController dialog;
 
     //Awake(){}
 
     void Start () {
         myState = States.bedroom_0_0;
 
-        GameObject dialogboxControllerObject = GameObject.FindWithTag("DialogBox");
+        /*GameObject dialogboxControllerObject = GameObject.FindWithTag("DialogBox");
         if (dialogboxControllerObject != null) {
             dialog = dialogboxControllerObject.GetComponent<DialogBoxController>();
         }
         if (dialogboxControllerObject == null) {
             Debug.Log("Cannot find 'DialogBoxController' script.");
+        }*/
+
+        GameObject gameDialogboxControllerObject = GameObject.FindWithTag("DialogBox");
+        if (gameDialogboxControllerObject != null) {
+            dialog = gameDialogboxControllerObject.GetComponent<GameDialogBoxController>();
+        }
+        if (gameDialogboxControllerObject == null) {
+            Debug.Log("Cannot find 'GameDialogBoxController' script.");
         }
 
         GameObject equipmentManagerObject = GameObject.FindWithTag("EquipmentManager");
@@ -72,8 +82,8 @@ public class TextController : MonoBehaviour {
 
     void bedroom_0_0()
     {
-        text.text = "Budzisz się w nocy. Spoglądasz na budzik, leżący na stoliku nocnym. Jest " + gameTime.hours + ":" + gameTime.minutes + ".\n" +
-                    "Nie możesz spać. Masz przeczucie, jakby coś tej nocy miało się wydarzyć." +
+        text.text = "Budzisz się z mokrym czołem. Pewnie przez koszmar, który przed chwilą Ci się śnił. Wszędzie jest ciemno.\n" +
+                    "Spoglądasz na budzik, leżący na stoliku nocnym. Jest " + gameTime.hours + ":" + gameTime.minutes + ".\n" +
                     "\n-> spójrz przez [O]kno" +
                     "\n-> wyjdź na [K]orytarz";
 
@@ -83,31 +93,33 @@ public class TextController : MonoBehaviour {
 
     void window_0()
     {
-        text.text = "W półmroku podchodzisz do okna. Spoglądasz przez nie. Dzisiejszej nocy jest wyjątkowo ciemno. Blask księżyca niewidoczny, " +
-                    "schowany za pobliskim lasem. Silny wiatr zakrzywia korony drzew swoim oddechem.\n" +
-                    "Gdzieś na ulicy w oddali widać jarzącą się mocnym, żółtym światłem latarnię." +
-                    "\n-> [O]dsuń się od okna";
+        text.text = "W półmroku podchodzisz do okna. Spoglądasz przez nie. Dzisiejszej nocy jest wyjątkowo ciemno. " +
+                    "Księżyc ledwie widoczny spośród czarnych jak smoła chmur. Silny wiatr zakrzywia korony drzew swoim oddechem.\n" +
+                    "Gdzieś na ulicy w oddali widać jarzącą się żółtym światłem latarnię.\n\n" +
+                    "W momencie, gdy odwracasz się od okna, słyszysz puknięcie w szybę. Niepewnie ponownie spoglądasz przez okno. " +
+                    "Okazuje się, że na parapecie leży gałąź. Myślisz sobie, że to ona uderzyła właśnie w okno.\n" +
+                    "\n-> [Z]ignoruj i wróć do pokoju.";
 
-        if      (Input.GetKeyDown(KeyCode.O)) { myState = States.bedroom_0_1; }
+        if (Input.GetKeyDown(KeyCode.Z)) { myState = States.bedroom_0_1; }
     }
 
     void bedroom_0_1()
     {
-        text.text = "Na łóżku leży rozgrzebana pościel i poduszka z odgniecionym śladem Twojej głowy.\n" +
-                    "W pokoju panuje chłód. ";
+        text.text = "W blasku księżyca dostrzegasz swoje łóżko. Leży na nim rozgrzebana pościel i poduszka z odgniecionym śladem Twojej głowy. " +
+                    "Jest całkowicie cicho. W pokoju panuje chłód. ";
 
         if (!equipment.Shoes_IsEnabled()) {
-            text.text += "Panele są zimne, marzną Ci stopy.";
+            text.text += "Panele są zimne, marzną Ci stopy.\n";
             text.text += "\n-> załóż [B]uty.";
         }
 
         if (!equipment.Phone_IsEnabled() && equipment.Shoes_IsEnabled()) {
-            text.text += "Kiedy schylasz się po buty, zauważasz telefon." +
+            text.text += "\nPrzy zakładaniu butów kątem oka zauważasz telefon, znajdujący się na szafce nocnej.\n" +
                          "\n-> weź [T]elefon z szafki nocnej.";
         }
 
         if (!equipment.Szlafrok_IsEnabled()) {
-            text.text += "\n-> Otwórz szafę i załóż [S]zlafrok.";
+            text.text += "\n-> otwórz szafę i załóż [S]zlafrok.";
         }
         
         text.text += "\n-> wyjdź na [K]orytarz.";
@@ -115,7 +127,7 @@ public class TextController : MonoBehaviour {
         if      (Input.GetKeyDown(KeyCode.T) && !equipment.Phone_IsEnabled())       { equipment.Phone_Enable(); myState = States.bedroom_0_1; }
         else if (Input.GetKeyDown(KeyCode.K))                                       { myState = States.upperCorridor_0; previousState = States.bedroom_0_1; StartCoroutine(enemy.EnemyCountdown()); }
         else if (Input.GetKeyDown(KeyCode.B) && !equipment.Shoes_IsEnabled())       { equipment.Shoes_Enable(); myState = States.bedroom_0_1; }
-        else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę i ubierasz szlafrok."); }
+        else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę, wyciągasz swój ulubiony szlafrok. Ubierasz go. Czujesz mięciutki dotyk materiału.\n\n\"Ah... jak przyjemnie...\""); }
     }
 
     void upperCorridor_0()

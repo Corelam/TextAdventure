@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour {
 
-    private DialogBoxController dialog;
+    private GameDialogBoxController dialog;
 
     private bool enemy;
     private bool enemyDetected;             // not used yet
 
     // Use this for initialization
     void Start () {
-        GameObject dialogboxControllerObject = GameObject.FindWithTag("DialogBox");
-        dialog = dialogboxControllerObject.GetComponent<DialogBoxController>();
+        GameObject gameDialogboxControllerObject = GameObject.FindWithTag("DialogBox");
+        dialog = gameDialogboxControllerObject.GetComponent<GameDialogBoxController>();
     }
 	
 	// Update is called once per frame
@@ -28,7 +28,7 @@ public class EnemyController : MonoBehaviour {
     public IEnumerator EnemyCountdown()
     {
         Debug.Log("Enemy Countdown started...");
-        yield return new WaitForSeconds(60);
+        yield return new WaitForSeconds(15);
         enemy = true;
         dialog.Open("Słyszysz dziwny dźwięk...");
         yield break;
