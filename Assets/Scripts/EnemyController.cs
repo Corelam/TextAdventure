@@ -28,7 +28,7 @@ public class EnemyController : MonoBehaviour {
     public IEnumerator EnemyCountdown()
     {
         Debug.Log("Enemy Countdown started...");
-        yield return new WaitForSeconds(15);
+        yield return new WaitForSeconds(5);
         enemy = true;
         dialog.Open("Słyszysz dziwny dźwięk...");
         yield break;

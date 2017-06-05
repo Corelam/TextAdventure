@@ -11,7 +11,7 @@ public class EquipmentManager : MonoBehaviour {
     private bool doorKey;
     private bool closetKey;
     private bool pistol;
-    private bool butterKnife;
+    private bool knife;
 
     void Start()
     {
@@ -110,4 +110,18 @@ public class EquipmentManager : MonoBehaviour {
 
     #endregion
 
+    public bool DoorKey_IsEnabled()
+    {
+        return doorKey;
+    }
+
+    public bool Knife_IsEnabled()
+    {
+        return knife;
+    }
+
+    public void Knife_Enable()
+    {
+        knife = true;
+    }
 }
