@@ -6,9 +6,11 @@ public class PlayerController : MonoBehaviour {
 
     private bool bleeding;
     private bool visible;
+    
+    private string currentRoom;         // not used yet         // to check if enemy is in the same room as player
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         bleeding = false;
         visible = true;
     }
@@ -46,4 +48,14 @@ public class PlayerController : MonoBehaviour {
     #endregion
 
     #endregion
+
+    public void SetCurrentRoom(string room)
+    {
+        currentRoom = room;
+    }
+
+    public string CurrentRoom()
+    {
+        return currentRoom;
+    }
 }

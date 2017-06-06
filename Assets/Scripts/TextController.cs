@@ -15,8 +15,6 @@ public class TextController : MonoBehaviour {
     };
     private States myState;
     private States previousState;       // not used yet
-    
-    private string currentRoom;         // not used yet         // to check if enemy is in the same room as player
 
     //private DialogBoxController dialog;
     private EquipmentManager equipment;
@@ -76,18 +74,18 @@ public class TextController : MonoBehaviour {
     }
 	
 	void Update () {
-        if      (myState == States.bedroom_0_0)     { bedroom_0_0(); currentRoom = "Bedroom"; }
-        else if (myState == States.window_0)        { window_0(); currentRoom = "Bedroom"; }
-        else if (myState == States.bedroom_0_1)     { bedroom_0_1(); currentRoom = "Bedroom"; }
-        else if (myState == States.upperCorridor_0) { upperCorridor_0(); currentRoom = "UpperCorridor"; }
-        else if (myState == States.bathroom_0)      { bathroom_0(); currentRoom = "Bathroom"; }
-        else if (myState == States.bathroom_sink)   { bathroom_sink(); currentRoom = "Bathroom"; }
-        else if (myState == States.bathroom_mirror) { bathroom_mirror(); currentRoom = "Bathroom"; }
-        else if (myState == States.bathroom_shower) { bathroom_shower(); currentRoom = "Bathroom"; }
-        else if (myState == States.hall_0)          { hall_0(); currentRoom = "Hall"; }
-        else if (myState == States.garage_0)        { garage_0(); currentRoom = "Garage"; }
-        else if (myState == States.kitchen_0)       { kitchen_0(); currentRoom = "Kitchen"; }
-        else if (myState == States.dinningRoom_0)   { dinningRoom_0(); currentRoom = "DinningRoom"; }
+        if      (myState == States.bedroom_0_0)     { bedroom_0_0(); player.SetCurrentRoom("Bedroom"); }
+        else if (myState == States.window_0)        { window_0(); player.SetCurrentRoom("Bedroom"); }
+        else if (myState == States.bedroom_0_1)     { bedroom_0_1(); player.SetCurrentRoom("Bedroom"); }
+        else if (myState == States.upperCorridor_0) { upperCorridor_0(); player.SetCurrentRoom("UpperCorridor"); }
+        else if (myState == States.bathroom_0)      { bathroom_0(); player.SetCurrentRoom("Bathroom"); }
+        else if (myState == States.bathroom_sink)   { bathroom_sink(); player.SetCurrentRoom("Bathroom"); }
+        else if (myState == States.bathroom_mirror) { bathroom_mirror(); player.SetCurrentRoom("Bathroom"); }
+        else if (myState == States.bathroom_shower) { bathroom_shower(); player.SetCurrentRoom("Bathroom"); }
+        else if (myState == States.hall_0)          { hall_0(); player.SetCurrentRoom("Hall"); }
+        else if (myState == States.garage_0)        { garage_0(); player.SetCurrentRoom("Garage"); }
+        else if (myState == States.kitchen_0)       { kitchen_0(); player.SetCurrentRoom("Kitchen"); }
+        else if (myState == States.dinningRoom_0)   { dinningRoom_0(); player.SetCurrentRoom("DinningRoom"); }
     }
 
     #region First floor rooms
