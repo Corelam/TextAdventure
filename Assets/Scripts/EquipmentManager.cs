@@ -90,9 +90,9 @@ public class EquipmentManager : MonoBehaviour {
         return shoes;
     }
 
-    public void Shoes_Enable()
+    public void Shoes_Enable(bool boolean)
     {
-        shoes = true;
+        shoes = boolean;
     }
     #endregion
 
@@ -102,9 +102,11 @@ public class EquipmentManager : MonoBehaviour {
         return szlafrok;
     }
 
-    public void Szlafrok_Enable()
+
+    /// <summary> Enable or disable Szlafrok item. </summary>
+    public void Szlafrok_Enable(bool boolean)
     {
-        szlafrok = true;
+        szlafrok = boolean;
     }
     #endregion
 

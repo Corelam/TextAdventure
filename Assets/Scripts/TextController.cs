@@ -88,6 +88,31 @@ public class TextController : MonoBehaviour {
         else if (myState == States.dinningRoom_0)   { dinningRoom_0(); player.SetCurrentRoom("DinningRoom"); }
     }
 
+    /// <summary> Function to set state from outside of this script (ex. EnemyController) </summary>
+    public void SetState(string stateName)
+    {
+        if (stateName.Equals("Hall"))
+        {
+            myState = States.hall_0;
+        }
+        else if (stateName.Equals("Garage"))
+        {
+            myState = States.garage_0;
+        }
+        else if (stateName.Equals("Kitchen"))
+        {
+            myState = States.kitchen_0;
+        }
+        else if (stateName.Equals("DinningRoom"))
+        {
+            myState = States.dinningRoom_0;
+        }
+        else if (stateName.Equals("?"))
+        {
+            //myState = States.garage_0;
+        }
+    }
+
     #region First floor rooms
 
     void bedroom_0_0()
@@ -146,8 +171,8 @@ public class TextController : MonoBehaviour {
             myState = States.upperCorridor_0;
             previousState = States.bedroom_0_1;
         }
-        else if (Input.GetKeyDown(KeyCode.B) && !equipment.Shoes_IsEnabled())       { equipment.Shoes_Enable(); myState = States.bedroom_0_1; }
-        else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę, wyciągasz swój ulubiony szlafrok. Ubierasz go. Czujesz mięciutki dotyk materiału.\n\n\"Ah... jak przyjemnie...\""); }
+        else if (Input.GetKeyDown(KeyCode.B) && !equipment.Shoes_IsEnabled())       { equipment.Shoes_Enable(true); myState = States.bedroom_0_1; }
+        else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(true); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę, wyciągasz swój ulubiony szlafrok. Ubierasz go. Czujesz mięciutki dotyk materiału.\n\n\"Ah... jak przyjemnie...\""); }
     }
 
     void upperCorridor_0()
