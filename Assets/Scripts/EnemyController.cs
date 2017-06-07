@@ -8,19 +8,28 @@ public class EnemyController : MonoBehaviour {
     private PlayerController player;
     private EquipmentManager equipment;
     private TextController gameController;
-
     public LevelManager level;
 
     [HideInInspector] public bool enemy;
     private bool enemyDetected;
-    private bool enemyWounded;              // not used yet
-    [SerializeField] private int enemyMovementSpeed;
+    [HideInInspector] public bool enemyNearby;
+    [HideInInspector] public bool enemyWounded;              // not used yet
+    [SerializeField] [Range(1, 20)] private float enemyMovementSpeed;
+    [SerializeField] [Range(0, 60)] private int enemyCountdownTime;
 
     [HideInInspector] public string[] rooms = { "DinningRoom", "Kitchen", "Hall", "Garage" };
 
     private string enemyPosition;
     private int roomSelector;       // takes int values from -1 to 1
     private int floorSelector = 0;  // 0 - ground floor, 1 - first floor
+    
+    [Header("Audio Clips")]
+    public AudioClip doorSound;
+    public AudioClip neckCrackSound;
+    public AudioClip stepsSound;
+    public AudioClip stairsSound;
+
+    private bool stepsArePlaying;
 
     // Use this for initialization
     void Start () {
@@ -46,6 +55,15 @@ public class EnemyController : MonoBehaviour {
     }
 
 
+    private IEnumerator PlayStepsSound()
+    {
+        stepsArePlaying = true;
+        //dialog.Open("Słyszysz kroki...");
+        SoundManager.instance.PlaySingle(stepsSound);
+        yield return new WaitForSeconds(stepsSound.length);
+        stepsArePlaying = false;
+    }
+
     /// <summary> Method for checking if player is in the same room as enemy. </summary>
     private void CheckIfSameRoom()
     {
@@ -55,7 +73,12 @@ public class EnemyController : MonoBehaviour {
 
             if (!player.Visible())
             {
-                dialog.Open("Słyszysz kroki...");   // zamienić to na dźwięk krokow, który się powtarza
+                //dialog.Open("Słyszysz kroki...");   // zamienić to na dźwięk krokow, który się powtarza
+                if (!stepsArePlaying)
+                {
+                    StartCoroutine(PlayStepsSound());
+                }
+                enemyNearby = true;
             }
             else if (player.Visible() && equipment.Szlafrok_IsEnabled())
             {
@@ -77,10 +100,15 @@ public class EnemyController : MonoBehaviour {
                 }
                 else
                 {
+                    SoundManager.instance.PlaySingle(neckCrackSound);
                     GameOverController.GameOverText = "Ciemna postać złapała Cię. Nie miałeś się czym obronić. Twój kark chrupnął jej w rękach niczym gałązka.\n\nNie żyjesz.";
                     level.LoadLevel("Lose");
                 }
             }
+        }
+        else
+        {
+            enemyNearby = false;
         }
     }
 
@@ -89,8 +117,8 @@ public class EnemyController : MonoBehaviour {
         return enemyDetected;
     }
 
-    /// <summary> Method used to reduce enemy's time needed to move to the other room. </summary>
-    public void EnemyMovementSpeed(int value)
+    /// <summary> Method used to increase/reduce enemy's time needed to move to the other room. </summary>
+    public void EnemyMovementSpeed(float value)
     {
         enemyMovementSpeed += value;
     }
@@ -99,9 +127,10 @@ public class EnemyController : MonoBehaviour {
     public IEnumerator EnemyCountdown()
     {
         Debug.Log("Enemy Countdown started...");
-        yield return new WaitForSeconds(10);
+        yield return new WaitForSeconds(enemyCountdownTime);
         enemy = true;
         dialog.Open("Słyszysz dziwny dźwięk...");       // System antywłamaniowy, który zablokował od środka wszystkie drzwi i musisz znaleźć kod, ponieważ go nie pamiętasz
+        SoundManager.instance.PlaySingle(doorSound);
         StartCoroutine(EnemyMove());
         yield break;
     }
@@ -128,7 +157,7 @@ public class EnemyController : MonoBehaviour {
                 {
                     arrayPosition = 2;
                     rooms = new string[] { "DinningRoom", "Kitchen", "Hall", "Garage" };
-                    Debug.Log("Enemy goes DOWNstairs.");
+                    //Debug.Log("Enemy goes DOWNstairs.");
                 }
                 else if (gameController.chamberUnlocked && floorSelector.Equals(0))
                 {
@@ -139,7 +168,7 @@ public class EnemyController : MonoBehaviour {
                 {
                     arrayPosition = 0;
                     rooms = new string[] { "UpperHall", "Bedroom", "Bathroom" };
-                    Debug.Log("Enemy goes UPstairs.");
+                    //Debug.Log("Enemy goes UPstairs.");
                 }
             }
 
@@ -159,10 +188,12 @@ public class EnemyController : MonoBehaviour {
             else if (enemyPosition.Equals("Hall") && floorSelector.Equals(1))
             {
                 roomSelector = 0;
+                SoundManager.instance.PlaySingle(stairsSound);
             }
             else if (enemyPosition.Equals("UpperHall") && floorSelector.Equals(0))
             {
                 roomSelector = 0;
+                SoundManager.instance.PlaySingle(stairsSound);
             }
             else if (floorSelector.Equals(0))
             {
@@ -200,7 +231,7 @@ public class EnemyController : MonoBehaviour {
             
             
             arrayPosition += roomSelector;
-            Debug.Log(arrayPosition);
+            //Debug.Log(arrayPosition);
 
             if (floorSelector.Equals(0))
             {

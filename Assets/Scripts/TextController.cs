@@ -14,7 +14,7 @@ public class TextController : MonoBehaviour {
         kitchen_0, dinningRoom_0
     };
     private States myState;
-    private States previousState;       // not used yet
+    private States previousState;       // not well used yet, for future development
 
     //private DialogBoxController dialog;
     private EquipmentManager equipment;
@@ -22,12 +22,14 @@ public class TextController : MonoBehaviour {
     private EnemyController enemy;
     private PlayerController player;
     private LevelManager level;
-
     private GameDialogBoxController dialog;
 
     //Awake(){}
     private bool countdownStarted;
     [HideInInspector] public bool chamberUnlocked;
+    private bool dinningRoomUnlocked;
+
+    public AudioClip knifeStabSound;
 
     void Start () {
         myState = States.bedroom_0_0;
@@ -271,6 +273,12 @@ public class TextController : MonoBehaviour {
         else
         {
             text.text = "Siedzisz ukryty za zasłoną.\n";
+
+            if (enemy.enemyNearby && equipment.Knife_IsEnabled() && !enemy.enemyWounded)
+            {
+                text.text += "Przez myśl przechodzi Ci, żeby zaatakować przeciwnika nożem i uciec..." +
+                             "\n-> [Z]aatakuj przeciwnika.";
+            }
         }
         
         if (enemy.EnemyDetected() && player.Visible())
@@ -282,6 +290,14 @@ public class TextController : MonoBehaviour {
 
         if      (Input.GetKeyDown(KeyCode.U)) { dialog.Open("Chowasz się za zasłoną."); player.Visibility_Set(false); }
         else if (Input.GetKeyDown(KeyCode.L)) { myState = States.bathroom_0; player.Visibility_Set(true); }
+        else if (Input.GetKeyDown(KeyCode.Z) && enemy.enemyNearby && equipment.Knife_IsEnabled() && !enemy.enemyWounded)
+        {
+            SoundManager.instance.PlaySingle(knifeStabSound);
+            dialog.Open("Atakujesz przeciwnika nożem i uciekasz do kuchni. Zyskujesz trochę na czasie.");
+            enemy.EnemyMovementSpeed(3);
+            myState = States.upperHall_0;
+            player.Visibility_Set(true);
+        }
     }
     #endregion
 
@@ -294,12 +310,25 @@ public class TextController : MonoBehaviour {
                     "\n-> Idź do [K]uchni." +
                     "\n-> Idź do [G]arażu." +
                     "\n-> Wyjdź na [Z]ewnątrz." +
-                    //"\n-> Idź [W]głąb korytarza." +
-                    "\n-> Otwórz [D]rzwi do pokoju." +
                     "\n-> Wejdź po [S]chodach na górę.";
+
+        if (dinningRoomUnlocked)
+        {
+            text.text += "\n-> Idź do [J]adalni.";
+        }
+
+        if (chamberUnlocked)
+        {
+            text.text += "\n-> Idź do [P]okoju.";
+        }
+        else
+        {
+            text.text += "\n-> Otwórz [D]rzwi do pokoju.";
+        }
 
         if      (Input.GetKeyDown(KeyCode.K)) { myState = States.kitchen_0; }
         else if (Input.GetKeyDown(KeyCode.G)) { myState = States.garage_0; }
+        else if (Input.GetKeyDown(KeyCode.J)) { myState = States.dinningRoom_0; }
         else if (Input.GetKeyDown(KeyCode.D))
         {
             if (chamberUnlocked)
@@ -317,18 +346,17 @@ public class TextController : MonoBehaviour {
             {
                 dialog.Open("Naciskasz klamkę, żeby otworzyć drzwi. Drzwi się otwierają. Jest ciemno. Nikogo nie widać na zewnątrz. Zamykasz je za sobą.");
             }
-            else if (!equipment.DoorKey_IsEnabled() && enemy.enemy)
+            else if (!equipment.DoorCode_IsEnabled() && enemy.enemy)
             {
                 dialog.Open("Naciskasz klamkę, żeby otworzyć drzwi. Drzwi nie otwierają się. Włączył się system antywłamaniowy i potrzebny jest kod. " +
                             "W drzwiach znajduje się prostokątne, mleczne szkło, przez które widać różne cienie.");
             }
-            else if (equipment.DoorKey_IsEnabled() && enemy.enemy && enemy.EnemyDetected())
+            else if (equipment.DoorCode_IsEnabled() && enemy.enemy && enemy.EnemyDetected())
             {
                 GameOverController.GameOverText = "Otwierasz drzwi. Udaje Ci się uciec...";
                 level.LoadLevel("Win");
             }
         }
-        //else if (Input.GetKeyDown(KeyCode.W)) { myState = States.; }
         else if (Input.GetKeyDown(KeyCode.S)) { myState = States.upperHall_0; }
     }
 
@@ -340,27 +368,32 @@ public class TextController : MonoBehaviour {
 
         if (enemy.EnemyDetected() && !equipment.Knife_IsEnabled())
         {
-            text.text += "\n-> [W]eź nóż z blatu.";
+            text.text += "\n-> Weź [N]óż z blatu.";
         }
 
         text.text += "\n-> Idź do następnego [P]omieszczenia." +
-                     "\n-> Wróć na [K]orytarz.";
+                     "\n-> [W]róć na korytarz.";
 
-        if      (Input.GetKeyDown(KeyCode.W)) { equipment.Knife_Enable(); dialog.Open("Podnosisz nóż z blatu."); }
+        if (equipment.Knife_IsEnabled() && equipment.doorCodeLocation.Equals("Knife") && !equipment.DoorCode_IsEnabled())
+        {
+            text.text += "\n\n Po podniesieniu noża dostrzegasz, że coś jeszcze leży. Przyglądasz się bliżej. To jakaś mała karteczka." +
+                         "\n-> Weź [K]artkę z kodem.";
+        }
+
+        if      (Input.GetKeyDown(KeyCode.N)) { equipment.Knife_Enable(); dialog.Open("Podnosisz nóż z blatu."); }
         else if (Input.GetKeyDown(KeyCode.P)) { myState = States.dinningRoom_0; }
-        else if (Input.GetKeyDown(KeyCode.K)) { myState = States.hall_0; }
-    }
-
-    void garage_0()
-    {
-        text.text = "W garażu jeszcze ciemniej niż w poprzednim pomieszczeniu. Nie za bardzo wiesz co tutaj robić.\n" +
-                    "\n-> [W]róć do korytarza.";
-
-        if      (Input.GetKeyDown(KeyCode.W)) { myState = States.hall_0; }
+        else if (Input.GetKeyDown(KeyCode.W)) { myState = States.hall_0; }
+        else if (Input.GetKeyDown(KeyCode.K) && equipment.doorCodeLocation.Equals("Knife") && !equipment.DoorCode_IsEnabled())
+        {
+            equipment.DoorCode_Enable();
+            dialog.Open("Podnosisz karteczkę. Okazuje się, że jest na niej zapisany kod do drzwi wyjściowych.");
+        }
     }
 
     void dinningRoom_0()
     {
+        dinningRoomUnlocked = true;
+
         if (player.Visible())
         {
             text.text = "W bladym świetle dostrzegasz na środku pomieszczenia okrągły stół z dwoma krzesłami. " +
@@ -368,14 +401,27 @@ public class TextController : MonoBehaviour {
                         "koronkowym obrusem sięgającym do ziemi. Za nim znajduje się kredens. To jadalnia.\n" +
                         "Na prawo znajduje się wyjście na korytarz.\n" +
                         "\n-> [W]róć do kuchni." +
-                        "\n-> [Z]ajrzyj do kredensu." +
+                        "\n-> Zajrzyj do [K]redensu." +
                         "\n-> [I]dź na korytarz.";
         }
         else
         {
             text.text = "Nie widzisz nic innego poza obrusem zwisającym ze stołu. Wydawałoby się, że słychać jak ktoś chodzi, " +
-                        "ale nie wiesz, czy to tylko omamy. To pewnie przez nienaturalny świst drzew na dworze.\n" +
-                        "\n-> Wyjdź z [U]krycia.";
+                        "ale nie wiesz, czy to tylko omamy. To pewnie przez nienaturalny świst drzew na dworze.\n";
+
+            if (!equipment.Matches_IsEnabled())
+            {
+                text.text += "Pod stołem znajdujesz paczkę zapałek." +
+                             "\n-> Weź [Z]apałki";
+            }
+
+            if (enemy.enemyNearby && equipment.Knife_IsEnabled() && !enemy.enemyWounded)
+            {
+                text.text += "Przez myśl przechodzi Ci, żeby dźgnąć przeciwnika nożem w stopę i uciec..." +
+                             "\n-> Spróbuj go [D]źgnąć.";
+            }
+
+            text.text += "\n-> Wyjdź z [U]krycia.";
         }
 
         if (enemy.EnemyDetected() && player.Visible())
@@ -385,20 +431,81 @@ public class TextController : MonoBehaviour {
 
         if      (Input.GetKeyDown(KeyCode.S)) { dialog.Open("Chowasz się pod stołem."); player.Visibility_Set(false); }
         else if (Input.GetKeyDown(KeyCode.U)) { myState = States.dinningRoom_0; player.Visibility_Set(true); }
-
+        else if (Input.GetKeyDown(KeyCode.Z) && !equipment.Matches_IsEnabled()) { dialog.Open("Podnosisz zapałki."); equipment.Matches_Enable(); }
         else if (Input.GetKeyDown(KeyCode.W)) { myState = States.kitchen_0; }
-        else if (Input.GetKeyDown(KeyCode.Z)) { dialog.Open("Otwierasz drzwiczki. Wydobywa się zapach starych rzeczy. Zestaw talerzy był używany z rzadka, tylko na specjalne okazje."); }
+        else if (Input.GetKeyDown(KeyCode.D) && enemy.enemyNearby && equipment.Knife_IsEnabled() && !enemy.enemyWounded)
+        {
+            SoundManager.instance.PlaySingle(knifeStabSound);
+            dialog.Open("Atakujesz przeciwnika nożem i uciekasz do kuchni. Zyskujesz trochę na czasie.");
+            enemy.EnemyMovementSpeed(3);
+            myState = States.kitchen_0;
+            player.Visibility_Set(true);
+        }
+        else if (Input.GetKeyDown(KeyCode.K))
+        {
+            if (equipment.doorCodeLocation.Equals("Sideboard") && !equipment.DoorCode_IsEnabled())
+            {
+                dialog.Open("Między talerzami dostrzegasz jakąś rzecz. Sięgasz po nią. Okazuje się, że to kartka z kodem do drzwi wyjściowych. Zabierasz ją.");
+                equipment.DoorCode_Enable();
+            }
+            else
+            {
+                dialog.Open("Otwierasz drzwiczki. Wydobywa się zapach starych rzeczy. Zestaw talerzy był używany z rzadka, tylko na specjalne okazje.");
+            }
+        }
         else if (Input.GetKeyDown(KeyCode.I)) { myState = States.hall_0; }
+    }
+
+    void garage_0()
+    {
+        if (!equipment.Matches_IsEnabled())
+        {
+            text.text = "W garażu jeszcze ciemniej niż w poprzednim pomieszczeniu. Nie za bardzo wiesz co tutaj robić.\n";
+        }
+        else
+        {
+            text.text = "Próbujesz zapalić zapałkę. Udaje Ci się dopiero za trzecim razem. W zasięgu ognia jesteś w stanie zobaczyć swoje auto, " +
+                        "a obok niego rower i inne graty, które trzymasz w tym miejscu. Rzadko tu bywasz. Zastanawiasz się, co znajdziesz dalej, " +
+                        "więc idziesz powoli wzdłuż ściany. Panuje tu grobowa cisza. Słyszysz jedyne kroki swoich stóp." +
+                        "\n-> Wsiądź do [A]uta." +
+                        "\n-> Przejdź przez [D]rzwi po prawej stronie.";
+        }
+
+        text.text += "\n-> [W]róć do korytarza.";
+        
+        if      (Input.GetKeyDown(KeyCode.W)) { myState = States.hall_0; }
+        else if (Input.GetKeyDown(KeyCode.A)) { dialog.Open("Naciskasz klamkę, ale drzwi są zamknięte."); }
+        else if (Input.GetKeyDown(KeyCode.D)) { myState = States.chamber_0; }
     }
 
     void chamber_0()
     {
-        text.text = " ";
+        text.text = "Wchodzisz do nieznanego pomieszczenia. Któryś raz odpalasz zapałkę. Powoli rozglądasz się po " +
+                    "pokoju. W jej słabym świetle dostrzegasz biurko, a na nim skrzynkę na narzędzia oraz porozrzucane " +
+                    "różne papiery. To warsztat. Idziesz dalej. Zaraz obok biurka znajdują się drzwi.";
+
+        if (equipment.doorCodeLocation.Equals("Chamber_Table") && !equipment.DoorCode_IsEnabled())
+        {
+            text.text += "\n-> Na biurku dostrzegasz [K]arteczkę.";
+        }
 
         if (!chamberUnlocked)
         {
             text.text += "\n-> [O]dblokuj drzwi.";
         }
+
+        if (chamberUnlocked)
+        {
+            text.text += "\n-> [W]róc na korytarz";
+        }
+
+        if      (Input.GetKeyDown(KeyCode.K) && equipment.doorCodeLocation.Equals("Chamber_Table"))
+        {
+            equipment.DoorCode_Enable();
+            dialog.Open("Sięgasz po karteczkę. Okazuje się, że jest to kartka z kodem do drzwi wyjściowych. Zabierasz ją.");
+        }
+        else if (Input.GetKeyDown(KeyCode.O)) { chamberUnlocked = true; }
+        else if (Input.GetKeyDown(KeyCode.W)) { myState = States.hall_0; }
     }
 
     #endregion

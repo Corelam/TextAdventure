@@ -8,16 +8,25 @@ public class EquipmentManager : MonoBehaviour {
     [SerializeField] private TextController textController;
     [SerializeField] private GameTimeController gameTime;
 
-    private bool doorKey;
-    private bool closetKey;
-    private bool pistol;
+    private bool doorCode;
+    //private bool closetKey;
+    //private bool pistol;
     private bool knife;
+    private bool matches;
+
+    private string[] doorCodeLocations = { "Knife", "Chamber_Table", "Sideboard" };
+    [HideInInspector] public string doorCodeLocation;
+
 
     void Start()
     {
         phoneImage.enabled = false;
         phoneClock.enabled = false;
         phoneImage_full.SetActive(false);
+
+        int doorCodeIndex = Random.Range(0, doorCodeLocations.Length);
+        doorCodeLocation = doorCodeLocations[doorCodeIndex];
+        Debug.Log(doorCodeLocation);
     }
 
     #region Phone
@@ -113,9 +122,14 @@ public class EquipmentManager : MonoBehaviour {
 
     #endregion
 
-    public bool DoorKey_IsEnabled()
+    public bool DoorCode_IsEnabled()
     {
-        return doorKey;
+        return doorCode;
+    }
+
+    public void DoorCode_Enable()
+    {
+        doorCode = true;
     }
 
     public bool Knife_IsEnabled()
@@ -126,5 +140,15 @@ public class EquipmentManager : MonoBehaviour {
     public void Knife_Enable()
     {
         knife = true;
+    }
+
+    public bool Matches_IsEnabled()
+    {
+        return matches;
+    }
+
+    public void Matches_Enable()
+    {
+        matches = true;
     }
 }

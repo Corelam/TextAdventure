@@ -127,7 +127,7 @@ public class PlayerController : MonoBehaviour {
             gameController.SetState("UpperHall");
         }
 
-        enemy.EnemyMovementSpeed(-1);           // speeds up enemy movement time every time he sees you - by 1 second
+        enemy.EnemyMovementSpeed(-1.0f);           // speeds up enemy movement time every time he sees you - by 1 second
     }
 
 }
