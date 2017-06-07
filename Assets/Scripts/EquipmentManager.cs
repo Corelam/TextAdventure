@@ -83,6 +83,7 @@ public class EquipmentManager : MonoBehaviour {
     #region Clothes
     private bool shoes;
     private bool szlafrok;
+    [HideInInspector] public bool szlafrok_thrown;
 
     #region Shoes
     public bool Shoes_IsEnabled()

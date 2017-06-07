@@ -8,9 +8,9 @@ public class TextController : MonoBehaviour {
 
     public Text text;
     private enum States {
-        bedroom_0_0, window_0, bedroom_0_1, upperCorridor_0,
+        bedroom_0_0, window_0, bedroom_0_1, upperHall_0,
         bathroom_0, bathroom_sink, bathroom_mirror, bathroom_shower,
-        hall_0, garage_0,
+        hall_0, garage_0, chamber_0,
         kitchen_0, dinningRoom_0
     };
     private States myState;
@@ -21,11 +21,13 @@ public class TextController : MonoBehaviour {
     private GameTimeController gameTime;
     private EnemyController enemy;
     private PlayerController player;
+    private LevelManager level;
 
     private GameDialogBoxController dialog;
 
     //Awake(){}
-    private bool CountdownStarted;
+    private bool countdownStarted;
+    [HideInInspector] public bool chamberUnlocked;
 
     void Start () {
         myState = States.bedroom_0_0;
@@ -71,13 +73,23 @@ public class TextController : MonoBehaviour {
         {
             Debug.Log("Cannot find 'PlayerController' script.");
         }
+
+        GameObject levelManagerObject = GameObject.FindWithTag("LevelManager");
+        if (levelManagerObject != null)
+        {
+            level = levelManagerObject.GetComponent<LevelManager>();
+        }
+        if (levelManagerObject == null)
+        {
+            Debug.Log("Cannot find 'LevelManager' script.");
+        }
     }
 	
 	void Update () {
         if      (myState == States.bedroom_0_0)     { bedroom_0_0(); player.SetCurrentRoom("Bedroom"); }
         else if (myState == States.window_0)        { window_0(); player.SetCurrentRoom("Bedroom"); }
         else if (myState == States.bedroom_0_1)     { bedroom_0_1(); player.SetCurrentRoom("Bedroom"); }
-        else if (myState == States.upperCorridor_0) { upperCorridor_0(); player.SetCurrentRoom("UpperCorridor"); }
+        else if (myState == States.upperHall_0)     { upperHall_0(); player.SetCurrentRoom("UpperHall"); }
         else if (myState == States.bathroom_0)      { bathroom_0(); player.SetCurrentRoom("Bathroom"); }
         else if (myState == States.bathroom_sink)   { bathroom_sink(); player.SetCurrentRoom("Bathroom"); }
         else if (myState == States.bathroom_mirror) { bathroom_mirror(); player.SetCurrentRoom("Bathroom"); }
@@ -86,6 +98,7 @@ public class TextController : MonoBehaviour {
         else if (myState == States.garage_0)        { garage_0(); player.SetCurrentRoom("Garage"); }
         else if (myState == States.kitchen_0)       { kitchen_0(); player.SetCurrentRoom("Kitchen"); }
         else if (myState == States.dinningRoom_0)   { dinningRoom_0(); player.SetCurrentRoom("DinningRoom"); }
+        else if (myState == States.chamber_0)       { chamber_0(); player.SetCurrentRoom("Chamber"); }
     }
 
     /// <summary> Function to set state from outside of this script (ex. EnemyController) </summary>
@@ -107,9 +120,21 @@ public class TextController : MonoBehaviour {
         {
             myState = States.dinningRoom_0;
         }
-        else if (stateName.Equals("?"))
+        else if (stateName.Equals("Chamber"))
         {
-            //myState = States.garage_0;
+            myState = States.chamber_0;
+        }
+        else if (stateName.Equals("UpperHall"))
+        {
+            myState = States.upperHall_0;
+        }
+        else if (stateName.Equals("Bathroom"))
+        {
+            myState = States.bathroom_0;
+        }
+        else if (stateName.Equals("Bedroom"))
+        {
+            myState = States.bedroom_0_1;
         }
     }
 
@@ -123,7 +148,7 @@ public class TextController : MonoBehaviour {
                     "\n-> wyjdź na [K]orytarz";
 
         if      (Input.GetKeyDown(KeyCode.O)) { myState = States.window_0; }
-        else if (Input.GetKeyDown(KeyCode.K)) { myState = States.upperCorridor_0; StartCoroutine(enemy.EnemyCountdown()); CountdownStarted = true; }
+        else if (Input.GetKeyDown(KeyCode.K)) { myState = States.upperHall_0; StartCoroutine(enemy.EnemyCountdown()); countdownStarted = true; }
     }
 
     void window_0()
@@ -153,7 +178,7 @@ public class TextController : MonoBehaviour {
                          "\n-> weź [T]elefon z szafki nocnej.";
         }
 
-        if (!equipment.Szlafrok_IsEnabled()) {
+        if (!equipment.Szlafrok_IsEnabled() && !equipment.szlafrok_thrown) {
             text.text += "\n-> otwórz szafę i załóż [S]zlafrok.";
         }
         
@@ -162,20 +187,20 @@ public class TextController : MonoBehaviour {
         if      (Input.GetKeyDown(KeyCode.T) && !equipment.Phone_IsEnabled())       { equipment.Phone_Enable(); myState = States.bedroom_0_1; }
         else if (Input.GetKeyDown(KeyCode.K))
         {
-            if (!CountdownStarted)
+            if (!countdownStarted)
             {
-                CountdownStarted = true;
+                countdownStarted = true;
                 StartCoroutine(enemy.EnemyCountdown());
             }
 
-            myState = States.upperCorridor_0;
+            myState = States.upperHall_0;
             previousState = States.bedroom_0_1;
         }
         else if (Input.GetKeyDown(KeyCode.B) && !equipment.Shoes_IsEnabled())       { equipment.Shoes_Enable(true); myState = States.bedroom_0_1; }
         else if (Input.GetKeyDown(KeyCode.S) && !equipment.Szlafrok_IsEnabled())    { equipment.Szlafrok_Enable(true); myState = States.bedroom_0_1; dialog.Open("Otwierasz szafę, wyciągasz swój ulubiony szlafrok. Ubierasz go. Czujesz mięciutki dotyk materiału.\n\n\"Ah... jak przyjemnie...\""); }
     }
 
-    void upperCorridor_0()
+    void upperHall_0()
     {
         text.text = "Jesteś na korytarzu. ";
 
@@ -191,7 +216,7 @@ public class TextController : MonoBehaviour {
 
         if      (Input.GetKeyDown(KeyCode.W))                               { dialog.Open("Światło nie działa. Pewnie korki wysiadły."); }
         else if (Input.GetKeyDown(KeyCode.Z))                               { myState = States.hall_0; }
-        else if (Input.GetKeyDown(KeyCode.S) && !enemy.EnemyDetected())     { myState = States.bedroom_0_1; }
+        else if (Input.GetKeyDown(KeyCode.S)) /*&& !enemy.EnemyDetected())*/{ myState = States.bedroom_0_1; }
         else if (Input.GetKeyDown(KeyCode.L))                               { myState = States.bathroom_0; }
     }
 
@@ -205,9 +230,9 @@ public class TextController : MonoBehaviour {
                     "\n-> Idź na [K]orytarz.";
 
         if      (Input.GetKeyDown(KeyCode.U)) { myState = States.bathroom_sink; }
-        //else if (Input.GetKeyDown(KeyCode.O)) { myState = States.upperCorridor_0; }
+        //else if (Input.GetKeyDown(KeyCode.O)) { myState = States.upperHall_0; }
         else if (Input.GetKeyDown(KeyCode.P)) { myState = States.bathroom_shower; }
-        else if (Input.GetKeyDown(KeyCode.K)) { myState = States.upperCorridor_0; }
+        else if (Input.GetKeyDown(KeyCode.K)) { myState = States.upperHall_0; }
     }
 
     void bathroom_sink()
@@ -270,24 +295,41 @@ public class TextController : MonoBehaviour {
                     "\n-> Idź do [G]arażu." +
                     "\n-> Wyjdź na [Z]ewnątrz." +
                     //"\n-> Idź [W]głąb korytarza." +
+                    "\n-> Otwórz [D]rzwi do pokoju." +
                     "\n-> Wejdź po [S]chodach na górę.";
 
         if      (Input.GetKeyDown(KeyCode.K)) { myState = States.kitchen_0; }
         else if (Input.GetKeyDown(KeyCode.G)) { myState = States.garage_0; }
+        else if (Input.GetKeyDown(KeyCode.D))
+        {
+            if (chamberUnlocked)
+            {
+                myState = States.chamber_0;
+            }
+            else
+            {
+                dialog.Open("Drzwi są zamknięte od środka.");
+            }
+        }
         else if (Input.GetKeyDown(KeyCode.Z))
         {
-            if (!equipment.DoorKey_IsEnabled())
+            if (!enemy.enemy)
             {
-                dialog.Open("Naciskasz klamkę, żeby otworzyć drzwi. Drzwi nie otwierają się. Potrzebny jest klucz. " +
-                            "W drzwiach znajduje się prostokątne mleczne szkło, przez które widać różne cienie.");
+                dialog.Open("Naciskasz klamkę, żeby otworzyć drzwi. Drzwi się otwierają. Jest ciemno. Nikogo nie widać na zewnątrz. Zamykasz je za sobą.");
             }
-            else if (equipment.DoorKey_IsEnabled() && enemy.EnemyDetected())
+            else if (!equipment.DoorKey_IsEnabled() && enemy.enemy)
             {
-                dialog.Open("Otwierasz drzwi. Udaje Ci się uciec...");
+                dialog.Open("Naciskasz klamkę, żeby otworzyć drzwi. Drzwi nie otwierają się. Włączył się system antywłamaniowy i potrzebny jest kod. " +
+                            "W drzwiach znajduje się prostokątne, mleczne szkło, przez które widać różne cienie.");
+            }
+            else if (equipment.DoorKey_IsEnabled() && enemy.enemy && enemy.EnemyDetected())
+            {
+                GameOverController.GameOverText = "Otwierasz drzwi. Udaje Ci się uciec...";
+                level.LoadLevel("Win");
             }
         }
         //else if (Input.GetKeyDown(KeyCode.W)) { myState = States.; }
-        else if (Input.GetKeyDown(KeyCode.S)) { myState = States.upperCorridor_0; }
+        else if (Input.GetKeyDown(KeyCode.S)) { myState = States.upperHall_0; }
     }
 
     void kitchen_0()
@@ -347,6 +389,16 @@ public class TextController : MonoBehaviour {
         else if (Input.GetKeyDown(KeyCode.W)) { myState = States.kitchen_0; }
         else if (Input.GetKeyDown(KeyCode.Z)) { dialog.Open("Otwierasz drzwiczki. Wydobywa się zapach starych rzeczy. Zestaw talerzy był używany z rzadka, tylko na specjalne okazje."); }
         else if (Input.GetKeyDown(KeyCode.I)) { myState = States.hall_0; }
+    }
+
+    void chamber_0()
+    {
+        text.text = " ";
+
+        if (!chamberUnlocked)
+        {
+            text.text += "\n-> [O]dblokuj drzwi.";
+        }
     }
 
     #endregion

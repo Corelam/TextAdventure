@@ -9,16 +9,18 @@ public class EnemyController : MonoBehaviour {
     private EquipmentManager equipment;
     private TextController gameController;
 
-    public LevelManager levelManager;
+    public LevelManager level;
 
-    private bool enemy;
-    private bool enemyDetected;             // not used yet
+    [HideInInspector] public bool enemy;
+    private bool enemyDetected;
+    private bool enemyWounded;              // not used yet
+    [SerializeField] private int enemyMovementSpeed;
 
-    private string[] groundRooms = { "DinningRoom", "Kitchen", "Hall", "Garage", "?" };
-    private string[] floorRooms = { "Bedroom", "UpperCorridor", "Bathroom" };
+    [HideInInspector] public string[] rooms = { "DinningRoom", "Kitchen", "Hall", "Garage" };
 
     private string enemyPosition;
     private int roomSelector;       // takes int values from -1 to 1
+    private int floorSelector = 0;  // 0 - ground floor, 1 - first floor
 
     // Use this for initialization
     void Start () {
@@ -33,6 +35,9 @@ public class EnemyController : MonoBehaviour {
 
         GameObject gameControllerObject = GameObject.FindWithTag("GameController");
         gameController = gameControllerObject.GetComponent<TextController>();
+
+        GameObject levelManagerObject = GameObject.FindWithTag("LevelManager");
+        level = levelManagerObject.GetComponent<LevelManager>();
     }
 	
 	// Update is called once per frame
@@ -46,11 +51,18 @@ public class EnemyController : MonoBehaviour {
     {
         if (player.CurrentRoom().Equals(enemyPosition))
         {
-            if (equipment.Szlafrok_IsEnabled())
+            enemyDetected = true;
+
+            if (!player.Visible())
+            {
+                dialog.Open("Słyszysz kroki...");   // zamienić to na dźwięk krokow, który się powtarza
+            }
+            else if (player.Visible() && equipment.Szlafrok_IsEnabled())
             {
                 dialog.Open("Zauważasz ciemną postać. Rzucasz w nią swoim szlafrokiem i uciekasz.");
                 equipment.Szlafrok_Enable(false);
-                PlayerEscape();
+                equipment.szlafrok_thrown = true;
+                player.PlayerEscape();
                 return;
             }
             else
@@ -58,41 +70,17 @@ public class EnemyController : MonoBehaviour {
                 int escapeChance;
                 escapeChance = Random.Range(0, 10);
                 
-                if (escapeChance <= 5)
+                if (escapeChance <= 6)
                 {
                     dialog.Open("Zauważasz ciemną postać. Nie masz się czym obronić. Udaje Ci się jednak uciec.");
-                    PlayerEscape();
+                    player.PlayerEscape();
                 }
                 else
                 {
-                    levelManager.LoadLevel("Lose");
+                    GameOverController.GameOverText = "Ciemna postać złapała Cię. Nie miałeś się czym obronić. Twój kark chrupnął jej w rękach niczym gałązka.\n\nNie żyjesz.";
+                    level.LoadLevel("Lose");
                 }
             }
-        }
-    }
-
-    /// <summary> Method responsible for changing player's position based on current location when enemy is in the same room. </summary>
-    private void PlayerEscape()
-    {
-        if (player.CurrentRoom().Equals("DinningRoom") || player.CurrentRoom().Equals("Kitchen") || player.CurrentRoom().Equals("Garage") || player.CurrentRoom().Equals("?"))
-        {
-            gameController.SetState("Hall");
-        }
-        else if (player.CurrentRoom().Equals("Hall"))
-        {
-            int roomSelector;
-
-            // loop to randomly change room except changing it back to "Hall"
-            for (;;)
-            {
-                roomSelector = Random.Range(0, 5);
-
-                if (!roomSelector.Equals(2))
-                {
-                    break;
-                }
-            }
-            gameController.SetState(groundRooms[roomSelector]);
         }
     }
 
@@ -101,47 +89,135 @@ public class EnemyController : MonoBehaviour {
         return enemyDetected;
     }
 
+    /// <summary> Method used to reduce enemy's time needed to move to the other room. </summary>
+    public void EnemyMovementSpeed(int value)
+    {
+        enemyMovementSpeed += value;
+    }
 
     /// <summary> Start countdown before enemy shows up in the scene. </summary>
     public IEnumerator EnemyCountdown()
     {
         Debug.Log("Enemy Countdown started...");
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(10);
         enemy = true;
         dialog.Open("Słyszysz dziwny dźwięk...");       // System antywłamaniowy, który zablokował od środka wszystkie drzwi i musisz znaleźć kod, ponieważ go nie pamiętasz
         StartCoroutine(EnemyMove());
         yield break;
     }
-
-
+    
     /// <summary> Method responsible for moving the enemy to the rooms. </summary>
     private IEnumerator EnemyMove()
     {
         Debug.Log("Enemy started to move...");
         int arrayPosition = 2;
-        enemyPosition = groundRooms[arrayPosition];
+        enemyPosition = rooms[arrayPosition];
 
         while (true)
         {
-            yield return new WaitForSeconds(5);
+            Debug.Log("Enemy select " + enemyPosition);
+
+            yield return new WaitForSeconds(enemyMovementSpeed);
             
-            if (enemyPosition.Equals("Hall"))   // so the enemy could move from here to other rooms, not only Garage or Kitchen
+            // if enemy is in Hall or UpperHall, draw floor level 
+            if (enemyPosition.Equals("Hall") || enemyPosition.Equals("UpperHall"))
             {
-                roomSelector = Random.Range(-2, 3);
-            }
-            else
-            {
-                roomSelector = Random.Range(-1, 2);
-            }
-            
-            arrayPosition += roomSelector;
-            if (arrayPosition.Equals(5) || arrayPosition.Equals(-1))
-            {
-                arrayPosition = 2;
+                floorSelector = Random.Range(0, 2);
+
+                if (!gameController.chamberUnlocked && floorSelector.Equals(0))
+                {
+                    arrayPosition = 2;
+                    rooms = new string[] { "DinningRoom", "Kitchen", "Hall", "Garage" };
+                    Debug.Log("Enemy goes DOWNstairs.");
+                }
+                else if (gameController.chamberUnlocked && floorSelector.Equals(0))
+                {
+                    arrayPosition = 2;
+                    rooms = new string[] { "DinningRoom", "Kitchen", "Hall", "Garage", "Chamber" };
+                }
+                else if (floorSelector.Equals(1))
+                {
+                    arrayPosition = 0;
+                    rooms = new string[] { "UpperHall", "Bedroom", "Bathroom" };
+                    Debug.Log("Enemy goes UPstairs.");
+                }
             }
 
-            enemyPosition = groundRooms[arrayPosition];
-            Debug.Log("Enemy select " + enemyPosition);
+
+            // room entering conditions
+            if (enemyPosition.Equals("Hall") && floorSelector.Equals(0))   // so the enemy could move from here to other rooms, not only Garage or Kitchen
+            {
+                if (!gameController.chamberUnlocked)
+                {
+                    roomSelector = Random.Range(-2, 2);
+                }
+                else
+                {
+                    roomSelector = Random.Range(-2, 3);
+                }
+            }
+            else if (enemyPosition.Equals("Hall") && floorSelector.Equals(1))
+            {
+                roomSelector = 0;
+            }
+            else if (enemyPosition.Equals("UpperHall") && floorSelector.Equals(0))
+            {
+                roomSelector = 0;
+            }
+            else if (floorSelector.Equals(0))
+            {
+                if (enemyPosition.Equals("Garage") && !gameController.chamberUnlocked)
+                {
+                    roomSelector = Random.Range(-1, 1);
+                }
+                else
+                {
+                    roomSelector = Random.Range(-1, 2);
+                }
+            }
+            else if (floorSelector.Equals(1))
+            {
+                if (enemyPosition.Equals("UpperHall"))
+                {
+                    roomSelector = Random.Range(0, 3);
+                }
+                else if (enemyPosition.Equals("Bathroom"))
+                {
+                    if (Random.Range(-1, 1).Equals(0))              // stay in the same room
+                    {
+                        roomSelector = 0;
+                    }
+                    else if (Random.Range(-1, 1).Equals(-1))        // go to UpperHall (for not being able to get to bedroom from bathroom directly)
+                    {
+                        roomSelector = -2;
+                    }
+                }
+                else if (enemyPosition.Equals("Bedroom"))
+                {
+                    roomSelector = Random.Range(-1, 1);
+                }
+            }
+            
+            
+            arrayPosition += roomSelector;
+            Debug.Log(arrayPosition);
+
+            if (floorSelector.Equals(0))
+            {
+                if (arrayPosition.Equals(5) || arrayPosition.Equals(-1))
+                {
+                    arrayPosition = 2;
+                }
+            }
+            else if (floorSelector.Equals(1))
+            {
+                if (arrayPosition.Equals(3) || arrayPosition.Equals(-1) || arrayPosition.Equals(4))
+                {
+                    arrayPosition = 0;
+                }
+            }
+
+            enemyPosition = rooms[arrayPosition];
         }
     }
 }
